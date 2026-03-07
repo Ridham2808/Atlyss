@@ -75,7 +75,7 @@ export default function Classes() {
     useEffect(() => { setTimeout(() => setMounted(true), 80); }, []);
 
     useEffect(() => {
-        const ep = user?.role === 'member' ? '/member/classes' : '/admin/classes';
+        const ep = user?.role === 'admin' ? '/admin/classes' : '/member/classes';
         api.get(ep).then(r => setClasses(r.data.classes)).catch(console.error).finally(() => setLoading(false));
         if (user?.role === 'admin') api.get('/admin/trainers').then(r => setTrainers(r.data.trainers)).catch(console.error);
     }, [user]);

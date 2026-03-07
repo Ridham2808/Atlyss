@@ -491,4 +491,52 @@ router.delete('/trainers/:id', async (req, res) => {
     }
 });
 
+// ─── Classes (Admin) ─────────────────────────────────────────────────────────
+router.get('/classes', async (req, res) => {
+    try {
+        const classes = await prisma.class.findMany({
+            include: {
+                trainer: { include: { user: { select: { id: true, name: true } } } },
+                _count: { select: { attendance: true } }
+            },
+            orderBy: { scheduleTime: 'asc' }
+        });
+        res.json({ classes });
+    } catch (err) {
+        res.status(500).json({ message: 'Failed to fetch classes' });
+    }
+});
+
+router.post('/classes', async (req, res) => {
+    try {
+        const { className, trainerId, scheduleTime, capacity } = req.body;
+        if (!className || !trainerId || !scheduleTime) return res.status(400).json({ message: 'className, trainerId, and scheduleTime are required' });
+        const cls = await prisma.class.create({
+            data: {
+                className,
+                trainerId: parseInt(trainerId),
+                scheduleTime: new Date(scheduleTime),
+                capacity: parseInt(capacity) || 20
+            },
+            include: {
+                trainer: { include: { user: { select: { id: true, name: true } } } },
+                _count: { select: { attendance: true } }
+            }
+        });
+        res.status(201).json({ class: cls });
+    } catch (err) {
+        console.error('Create class error:', err);
+        res.status(500).json({ message: 'Failed to create class' });
+    }
+});
+
+router.delete('/classes/:id', async (req, res) => {
+    try {
+        await prisma.class.delete({ where: { id: parseInt(req.params.id) } });
+        res.json({ message: 'Class deleted' });
+    } catch (err) {
+        res.status(500).json({ message: 'Failed to delete class' });
+    }
+});
+
 module.exports = router;
