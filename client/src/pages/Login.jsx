@@ -121,8 +121,8 @@ const Login = () => {
   const fillDemo = (role) => {
     const creds = {
       admin: { email: 'admin@atlyss.com', password: 'Admin@123' },
-      trainer: { email: 'trainer@atlyss.com', password: 'Trainer@123' },
-      member: { email: 'member@atlyss.com', password: 'Member@123' },
+      trainer: { email: 'jake@atlyss.com', password: 'Trainer@123' },
+      member: { email: 'john@atlyss.com', password: 'Member@123' },
     };
     setEmail(creds[role].email);
     setPassword(creds[role].password);

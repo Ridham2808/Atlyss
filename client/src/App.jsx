@@ -44,12 +44,12 @@ function App() {
             </ProtectedRoute>
           } />
           <Route path="/members" element={
-            <ProtectedRoute roles={['admin']}>
+            <ProtectedRoute roles={['admin', 'trainer']}>
               <Members />
             </ProtectedRoute>
           } />
           <Route path="/trainers" element={
-            <ProtectedRoute roles={['admin']}>
+            <ProtectedRoute roles={['admin', 'trainer']}>
               <Trainers />
             </ProtectedRoute>
           } />

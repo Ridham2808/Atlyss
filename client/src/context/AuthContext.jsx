@@ -25,11 +25,17 @@ export const AuthProvider = ({ children }) => {
     }, []);
 
     const login = async (email, password) => {
-        const { data } = await api.post('/auth/login', { email, password });
-        localStorage.setItem('atlyss_token', data.token);
-        setUser(data.user);
-        toast.success(`Welcome back, ${data.user.name}!`);
-        return data.user;
+        try {
+            const { data } = await api.post('/auth/login', { email, password });
+            localStorage.setItem('atlyss_token', data.token);
+            setUser(data.user);
+            toast.success(`Welcome back, ${data.user.name}!`);
+            return data.user;
+        } catch (err) {
+            const msg = err.response?.data?.message || 'Login failed. Check your credentials.';
+            toast.error(msg);
+            throw err;
+        }
     };
 
     const register = async (userData) => {
