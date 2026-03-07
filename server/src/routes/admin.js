@@ -539,4 +539,32 @@ router.delete('/classes/:id', async (req, res) => {
     }
 });
 
+// ─── Admin Profile ───────────────────────────────────────────────────────────
+router.get('/profile', async (req, res) => {
+    try {
+        const user = await prisma.user.findUnique({
+            where: { id: req.user.id }
+        });
+        if (!user) return res.status(404).json({ message: 'Admin not found' });
+        const { password, ...clean } = user;
+        res.json(clean);
+    } catch (err) {
+        res.status(500).json({ message: 'Failed to fetch admin profile' });
+    }
+});
+
+router.put('/profile', async (req, res) => {
+    try {
+        const { name, email } = req.body;
+        const updated = await prisma.user.update({
+            where: { id: req.user.id },
+            data: { name, email }
+        });
+        const { password, ...clean } = updated;
+        res.json({ message: 'Profile updated', user: clean });
+    } catch (err) {
+        res.status(500).json({ message: 'Failed to update admin profile' });
+    }
+});
+
 module.exports = router;

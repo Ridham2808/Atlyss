@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import DashboardShell from '../../components/layout/DashboardShell';
 import api from '../../utils/api';
-import { UsersIcon, ClipboardDocumentListIcon, SparklesIcon, ClockIcon, CheckCircleIcon } from '@heroicons/react/24/outline';
+import { UsersIcon, ClipboardDocumentListIcon, SparklesIcon, ClockIcon, CheckCircleIcon, ScaleIcon, ChartBarIcon } from '@heroicons/react/24/outline';
 
 const DAYS = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -217,6 +217,20 @@ export default function TrainerDashboard() {
                                             EDIT PLAN
                                         </button>
                                     )}
+                                    <button
+                                        onClick={() => navigate(`/trainer/members/${selected.id}/measurements`)}
+                                        style={{ background: T.accDim, border: `1px solid ${T.accBorder}`, borderRadius: 6, padding: '8px 18px', fontFamily: T.mono, fontSize: '0.7rem', fontWeight: 700, color: T.acc, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}
+                                    >
+                                        <ScaleIcon style={{ width: 16 }} />
+                                        MEASUREMENTS
+                                    </button>
+                                    <button
+                                        onClick={() => navigate(`/trainer/members/${selected.id}/progress`)}
+                                        style={{ background: 'rgba(74,126,199,0.09)', border: `1px solid rgba(74,126,199,0.22)`, borderRadius: 6, padding: '8px 18px', fontFamily: T.mono, fontSize: '0.7rem', fontWeight: 700, color: '#4a7ec7', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 8 }}
+                                    >
+                                        <ChartBarIcon style={{ width: 16 }} />
+                                        PROGRESS
+                                    </button>
                                 </div>
 
                                 {/* No plan state */}
@@ -283,6 +297,6 @@ export default function TrainerDashboard() {
                     </div>
                 </div>
             </div>
-        </DashboardShell>
+        </DashboardShell >
     );
 }

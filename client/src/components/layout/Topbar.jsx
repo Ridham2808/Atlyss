@@ -46,6 +46,10 @@ export default function Topbar() {
     const links = user ? (roleLinks[user.role] || []) : [];
     const role = roleColors[user?.role] || roleColors.member;
 
+    const profilePath = user?.role === 'admin' ? '/admin/profile'
+        : user?.role === 'trainer' ? '/trainer/profile'
+            : '/member/profile';
+
     useEffect(() => {
         const close = (e) => { if (menuRef.current && !menuRef.current.contains(e.target)) setUserMenuOpen(false); };
         document.addEventListener('mousedown', close);
@@ -383,7 +387,7 @@ export default function Topbar() {
                                         <div className="umenu-email">{user.email}</div>
                                     </div>
                                     <div className="umenu-body">
-                                        <Link to="/profile" className="umenu-btn" onClick={() => setUserMenuOpen(false)}>
+                                        <Link to={profilePath} className="umenu-btn" onClick={() => setUserMenuOpen(false)}>
                                             <UserCircleIcon style={{ width: 13, height: 13 }} />
                                             Profile
                                         </Link>

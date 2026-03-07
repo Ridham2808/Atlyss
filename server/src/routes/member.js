@@ -47,16 +47,43 @@ router.get('/profile', async (req, res) => {
 router.put('/profile', async (req, res) => {
     try {
         const userId = req.user.id;
-        const { name, age, height, weight, fitnessGoal, membershipType } = req.body;
+        const {
+            name, age, gender, dob, mobile, address, occupation,
+            height, weight, fitnessGoal, membershipType, membershipPackage,
+            membershipAmount, membershipDueDate, sessionTime,
+            guardianName, guardianRelation, guardianMobile
+        } = req.body;
 
-        await prisma.user.update({ where: { id: userId }, data: { name } });
+        if (name) {
+            await prisma.user.update({ where: { id: userId }, data: { name } });
+        }
+
         await prisma.member.update({
             where: { userId },
-            data: { age: parseInt(age), height: parseFloat(height), weight: parseFloat(weight), fitnessGoal, membershipType }
+            data: {
+                age: age ? parseInt(age) : undefined,
+                gender: gender ?? undefined,
+                dob: dob ? new Date(dob) : undefined,
+                mobile: mobile ?? undefined,
+                address: address ?? undefined,
+                occupation: occupation ?? undefined,
+                height: height ? parseFloat(height) : undefined,
+                weight: weight ? parseFloat(weight) : undefined,
+                fitnessGoal: fitnessGoal ?? undefined,
+                membershipType: membershipType ?? undefined,
+                membershipPackage: membershipPackage ?? undefined,
+                membershipAmount: membershipAmount ? parseFloat(membershipAmount) : undefined,
+                membershipDueDate: membershipDueDate ? new Date(membershipDueDate) : undefined,
+                sessionTime: sessionTime ?? undefined,
+                guardianName: guardianName ?? undefined,
+                guardianRelation: guardianRelation ?? undefined,
+                guardianMobile: guardianMobile ?? undefined,
+            }
         });
 
         res.json({ message: 'Profile updated' });
     } catch (err) {
+        console.error('Update profile error:', err);
         res.status(500).json({ message: 'Failed to update profile' });
     }
 });
@@ -195,6 +222,21 @@ router.post('/review/:trainerId', async (req, res) => {
     } catch (err) {
         console.error('Submit review error:', err);
         res.status(500).json({ message: 'Failed to submit review' });
+    }
+});
+
+// ─── GET My Body Measurements ─────────────────────────────────────────────────
+router.get('/measurements', async (req, res) => {
+    try {
+        const member = await prisma.member.findUnique({ where: { userId: req.user.id } });
+        if (!member) return res.status(404).json({ message: 'Member not found' });
+        const measurements = await prisma.bodyMeasurement.findMany({
+            where: { memberId: member.id },
+            orderBy: { measuredAt: 'desc' }
+        });
+        res.json({ measurements });
+    } catch (err) {
+        res.status(500).json({ message: 'Failed to fetch measurements' });
     }
 });
 

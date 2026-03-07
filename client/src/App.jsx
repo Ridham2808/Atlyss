@@ -15,6 +15,20 @@ import Classes from './pages/Classes';
 import Workouts from './pages/Workouts';
 import ManageWorkouts from './pages/trainer/ManageWorkouts';
 import TrainerProfile from './pages/trainer/TrainerProfile';
+import TrainerProfileEdit from './pages/trainer/TrainerProfileEdit';
+import MemberMeasurements from './pages/trainer/MemberMeasurements';
+import MyMeasurements from './pages/member/MyMeasurements';
+import MemberProfile from './pages/member/MemberProfile';
+import MemberProgress from './pages/member/MemberProgress';
+import AdminProfile from './pages/admin/AdminProfile';
+
+const ProfileRedirect = () => {
+  const { user } = useAuth();
+  if (!user) return <Navigate to="/login" replace />;
+  if (user.role === 'admin') return <Navigate to="/admin/profile" replace />;
+  if (user.role === 'trainer') return <Navigate to="/trainer/profile" replace />;
+  return <Navigate to="/member/profile" replace />;
+};
 
 function App() {
   return (
@@ -45,6 +59,11 @@ function App() {
               <AdminDashboard />
             </ProtectedRoute>
           } />
+          <Route path="/admin/profile" element={
+            <ProtectedRoute roles={['admin']}>
+              <AdminProfile />
+            </ProtectedRoute>
+          } />
           <Route path="/members" element={
             <ProtectedRoute roles={['admin', 'trainer']}>
               <Members />
@@ -72,9 +91,19 @@ function App() {
               <TrainerProfile />
             </ProtectedRoute>
           } />
+          <Route path="/trainer/profile/edit" element={
+            <ProtectedRoute roles={['trainer']}>
+              <TrainerProfileEdit />
+            </ProtectedRoute>
+          } />
           <Route path="/trainers/:id/profile" element={
             <ProtectedRoute roles={['admin']}>
               <TrainerProfile />
+            </ProtectedRoute>
+          } />
+          <Route path="/trainer/members/:memberId/measurements" element={
+            <ProtectedRoute roles={['trainer']}>
+              <MemberMeasurements />
             </ProtectedRoute>
           } />
 
@@ -82,6 +111,26 @@ function App() {
           <Route path="/dashboard/member" element={
             <ProtectedRoute roles={['member']}>
               <MemberDashboard />
+            </ProtectedRoute>
+          } />
+          <Route path="/member/profile" element={
+            <ProtectedRoute roles={['member']}>
+              <MemberProfile />
+            </ProtectedRoute>
+          } />
+          <Route path="/my-measurements" element={
+            <ProtectedRoute roles={['member']}>
+              <MyMeasurements />
+            </ProtectedRoute>
+          } />
+          <Route path="/progress" element={
+            <ProtectedRoute roles={['member']}>
+              <MemberProgress />
+            </ProtectedRoute>
+          } />
+          <Route path="/trainer/members/:memberId/progress" element={
+            <ProtectedRoute roles={['trainer']}>
+              <MemberProgress />
             </ProtectedRoute>
           } />
 
@@ -98,6 +147,7 @@ function App() {
           } />
 
           {/* Redirects */}
+          <Route path="/profile" element={<ProfileRedirect />} />
           <Route path="/" element={<Navigate to="/login" replace />} />
           <Route path="*" element={<Navigate to="/login" replace />} />
         </Routes>

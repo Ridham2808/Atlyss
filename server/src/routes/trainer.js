@@ -132,11 +132,18 @@ router.get('/profile', async (req, res) => {
 router.put('/profile', async (req, res) => {
     try {
         const {
-            mobile, gender, address, weight, height,
+            name, mobile, gender, age, address, weight, height,
             specialization, specializations, trainerType,
             salary, gymJoinDate, successRate,
             certificates, fitnessJourney, termsConditions, photo,
         } = req.body;
+
+        if (name) {
+            await prisma.user.update({
+                where: { id: req.user.id },
+                data: { name }
+            });
+        }
 
         await prisma.trainer.update({
             where: { userId: req.user.id },
@@ -144,6 +151,7 @@ router.put('/profile', async (req, res) => {
                 photo: photo ?? undefined,
                 mobile: mobile ?? undefined,
                 gender: gender ?? undefined,
+                age: age ? parseInt(age) : undefined,
                 address: address ?? undefined,
                 weight: weight ? parseFloat(weight) : undefined,
                 height: height ? parseFloat(height) : undefined,
@@ -226,6 +234,84 @@ router.get('/exercises', async (req, res) => {
         res.json({ exercises });
     } catch (err) {
         res.status(500).json({ message: 'Failed to fetch exercises' });
+    }
+});
+// ─── Body Measurements (Trainer adds for their members) ──────────────────────
+
+// GET all measurements for an assigned member
+router.get('/members/:memberId/measurements', async (req, res) => {
+    try {
+        const trainerId = req.user.id;
+        const member = await prisma.member.findFirst({
+            where: { id: parseInt(req.params.memberId), trainer: { userId: trainerId } }
+        });
+        if (!member) return res.status(403).json({ message: 'This member is not assigned to you' });
+
+        const measurements = await prisma.bodyMeasurement.findMany({
+            where: { memberId: member.id },
+            orderBy: { measuredAt: 'desc' }
+        });
+        res.json({ measurements });
+    } catch (err) {
+        console.error('Get measurements error:', err);
+        res.status(500).json({ message: 'Failed to fetch measurements' });
+    }
+});
+
+// POST add a new measurement for an assigned member
+router.post('/members/:memberId/measurements', async (req, res) => {
+    try {
+        const trainerId = req.user.id;
+        const member = await prisma.member.findFirst({
+            where: { id: parseInt(req.params.memberId), trainer: { userId: trainerId } }
+        });
+        if (!member) return res.status(403).json({ message: 'This member is not assigned to you' });
+
+        const {
+            measuredAt, notes,
+            weight, height,
+            neck, shoulder, chest, upperArm, forearm, wrist,
+            upperAbdomen, waist, lowerAbdomen, hips, thigh, calf, ankle,
+            bodyFat, visceralFat, restingMetabolism, bmi, biologicalAge,
+        } = req.body;
+
+        const toF = v => v !== undefined && v !== '' && v !== null ? parseFloat(v) : null;
+        const toI = v => v !== undefined && v !== '' && v !== null ? parseInt(v) : null;
+
+        const measurement = await prisma.bodyMeasurement.create({
+            data: {
+                memberId: member.id,
+                recordedBy: trainerId,
+                measuredAt: measuredAt ? new Date(measuredAt) : new Date(),
+                notes: notes || null,
+                weight: toF(weight), height: toF(height),
+                neck: toF(neck), shoulder: toF(shoulder), chest: toF(chest),
+                upperArm: toF(upperArm), forearm: toF(forearm), wrist: toF(wrist),
+                upperAbdomen: toF(upperAbdomen), waist: toF(waist), lowerAbdomen: toF(lowerAbdomen),
+                hips: toF(hips), thigh: toF(thigh), calf: toF(calf), ankle: toF(ankle),
+                bodyFat: toF(bodyFat), visceralFat: toF(visceralFat),
+                restingMetabolism: toF(restingMetabolism), bmi: toF(bmi), biologicalAge: toI(biologicalAge),
+            }
+        });
+        res.status(201).json({ measurement });
+    } catch (err) {
+        console.error('Add measurement error:', err);
+        res.status(500).json({ message: 'Failed to add measurement' });
+    }
+});
+
+// DELETE a measurement record
+router.delete('/members/:memberId/measurements/:id', async (req, res) => {
+    try {
+        const trainerId = req.user.id;
+        const member = await prisma.member.findFirst({
+            where: { id: parseInt(req.params.memberId), trainer: { userId: trainerId } }
+        });
+        if (!member) return res.status(403).json({ message: 'Not authorized' });
+        await prisma.bodyMeasurement.delete({ where: { id: parseInt(req.params.id) } });
+        res.json({ message: 'Measurement deleted' });
+    } catch (err) {
+        res.status(500).json({ message: 'Failed to delete measurement' });
     }
 });
 
