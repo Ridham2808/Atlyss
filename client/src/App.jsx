@@ -14,6 +14,7 @@ import Trainers from './pages/admin/Trainers';
 import Classes from './pages/Classes';
 import Workouts from './pages/Workouts';
 import ManageWorkouts from './pages/trainer/ManageWorkouts';
+import TrainerProfile from './pages/trainer/TrainerProfile';
 
 function App() {
   return (
@@ -64,6 +65,16 @@ function App() {
           <Route path="/manage-workouts" element={
             <ProtectedRoute roles={['trainer', 'admin']}>
               <ManageWorkouts />
+            </ProtectedRoute>
+          } />
+          <Route path="/trainer/profile" element={
+            <ProtectedRoute roles={['trainer']}>
+              <TrainerProfile />
+            </ProtectedRoute>
+          } />
+          <Route path="/trainers/:id/profile" element={
+            <ProtectedRoute roles={['admin']}>
+              <TrainerProfile />
             </ProtectedRoute>
           } />
 

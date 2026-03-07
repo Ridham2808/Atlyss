@@ -1,4 +1,5 @@
 import React, { useEffect, useState, useRef } from 'react';
+import { useNavigate } from 'react-router-dom';
 import DashboardShell from '../../components/layout/DashboardShell';
 import api from '../../utils/api';
 import { AcademicCapIcon, StarIcon, XMarkIcon, PlusIcon, PencilIcon, CameraIcon } from '@heroicons/react/24/outline';
@@ -163,6 +164,7 @@ const BLANK_FORM = {
 
 export default function Trainers() {
     const { user } = useAuth();
+    const navigate = useNavigate();
     const isAdmin = user?.role === 'admin';
     const isTrainer = user?.role === 'trainer';
 
@@ -439,6 +441,12 @@ export default function Trainers() {
                                     {/* Admin actions */}
                                     {isAdmin && (
                                         <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
+                                            <BtnSecondary
+                                                onClick={() => navigate(`/trainers/${t.id}/profile`)}
+                                                style={{ flex: 1, padding: '6px 12px', fontSize: '0.65rem', borderColor: 'rgba(80,133,204,0.3)', color: '#5085cc' }}
+                                            >
+                                                View Profile
+                                            </BtnSecondary>
                                             <BtnSecondary onClick={() => openEdit(t)} style={{ flex: 1, padding: '6px 12px', fontSize: '0.65rem' }}>
                                                 <PencilIcon style={{ width: 12 }} /> Edit
                                             </BtnSecondary>

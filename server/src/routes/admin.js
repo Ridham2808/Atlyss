@@ -465,6 +465,22 @@ router.put('/trainers/:id', async (req, res) => {
     }
 });
 
+// ─── PATCH Toggle Trainer Active ─────────────────────────────────────────────
+router.patch('/trainers/:id/toggle-active', async (req, res) => {
+    try {
+        const uid = parseInt(req.params.id);
+        const trainer = await prisma.trainer.findUnique({ where: { userId: uid } });
+        if (!trainer) return res.status(404).json({ message: 'Trainer not found' });
+        const updated = await prisma.trainer.update({
+            where: { userId: uid },
+            data: { isActive: !trainer.isActive }
+        });
+        res.json({ message: updated.isActive ? 'Trainer activated' : 'Trainer deactivated', isActive: updated.isActive });
+    } catch (err) {
+        res.status(500).json({ message: 'Failed to toggle trainer status' });
+    }
+});
+
 // ─── DELETE Trainer ───────────────────────────────────────────────────────────
 router.delete('/trainers/:id', async (req, res) => {
     try {
