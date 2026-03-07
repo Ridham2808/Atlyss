@@ -1,0 +1,103 @@
+// server/prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  admin
+  trainer
+  member
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String
+  role      Role     @default(member)
+  createdAt DateTime @default(now())
+  member    Member?
+  trainer   Trainer?
+}
+
+model Member {
+  id             Int           @id @default(autoincrement())
+  userId         Int           @unique
+  age            Int           @default(25)
+  height         Float         @default(170)
+  weight         Float         @default(70)
+  fitnessGoal    String        @default("weight_loss")
+  membershipType String        @default("basic")
+  joinDate       DateTime      @default(now())
+  lastAttendance DateTime?
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workoutPlans   WorkoutPlan[]
+  attendance     Attendance[]
+
+  @@index([fitnessGoal])
+  @@index([membershipType])
+}
+
+model Trainer {
+  id             Int     @id @default(autoincrement())
+  userId         Int     @unique
+  specialization String  @default("General Fitness")
+  experience     Int     @default(1)
+  user           User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  classes        Class[]
+}
+
+model Exercise {
+  id           Int           @id @default(autoincrement())
+  name         String
+  muscleGroup  String
+  difficulty   String        @default("beginner")
+  instructions String
+  videoUrl     String?
+  workoutPlans WorkoutPlan[]
+
+  @@index([muscleGroup])
+  @@index([difficulty])
+}
+
+model WorkoutPlan {
+  id         Int      @id @default(autoincrement())
+  memberId   Int
+  exerciseId Int
+  day        String
+  sets       Int      @default(3)
+  reps       Int      @default(12)
+  createdAt  DateTime @default(now())
+  member     Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  exercise   Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+
+  @@index([memberId])
+}
+
+model Class {
+  id           Int          @id @default(autoincrement())
+  className    String
+  trainerId    Int
+  scheduleTime DateTime
+  capacity     Int          @default(20)
+  trainer      Trainer      @relation(fields: [trainerId], references: [id], onDelete: Cascade)
+  attendance   Attendance[]
+}
+
+model Attendance {
+  id          Int      @id @default(autoincrement())
+  memberId    Int
+  classId     Int
+  checkinTime DateTime @default(now())
+  member      Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  class       Class    @relation(fields: [classId], references: [id], onDelete: Cascade)
+
+  @@index([memberId])
+  @@index([classId])
+  @@index([checkinTime])
+}
