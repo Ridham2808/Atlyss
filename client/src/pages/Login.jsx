@@ -671,14 +671,8 @@ const Login = () => {
           <div className={`pg-form-wrap ${mounted ? 'visible' : ''}`}>
 
             {/* Logo */}
-            <div className="pg-logo-row">
-              <div className="pg-logo-icon">
-                <img src={logo} alt="Atlyss" />
-              </div>
-              <div>
-                <div className="pg-logo-name">Atlyss</div>
-                <div className="pg-logo-sub">Smart Gym Management</div>
-              </div>
+            <div className="pg-logo-row" style={{ display: 'flex', justifyContent: 'center', marginBottom: 46 }}>
+              <img src={logo} alt="Atlyss" style={{ height: 64, width: 'auto', filter: 'drop-shadow(0 0 20px rgba(255,80,0,0.25))' }} />
             </div>
 
             {/* Heading */}

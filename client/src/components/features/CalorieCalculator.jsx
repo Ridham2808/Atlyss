@@ -60,6 +60,7 @@ const CalorieCalculator = () => {
             extreme_loss: { label: 'Extreme Weight Loss (1kg/wk)', cals: Math.round(tdee - 1000), pct: 65 },
             mild_gain: { label: 'Mild Weight Gain (0.25kg/wk)', cals: Math.round(tdee + 250), pct: 109 },
             weight_gain: { label: 'Weight Gain (0.5kg/wk)', cals: Math.round(tdee + 500), pct: 117 },
+            extreme_gain: { label: 'Muscle Gain (1kg/wk)', cals: Math.round(tdee + 1000), pct: 135 },
         };
 
         const currentGoalCals = goals[goal]?.cals || Math.round(tdee);
@@ -220,13 +221,6 @@ const CalorieCalculator = () => {
                             </div>
                         </div>
 
-                        {/* Tips */}
-                        <div style={{ display: 'flex', gap: 12, alignItems: 'flex-start', padding: '12px 16px', background: 'rgba(255,255,255,0.02)', borderRadius: 6, border: '1px solid rgba(255,255,255,0.05)' }}>
-                            <SparklesIcon style={{ width: 18, color: T.acc, marginTop: 2 }} />
-                            <div style={{ fontSize: '0.65rem', color: T.text, lineHeight: 1.5 }}>
-                                <strong>Antigravity Pro-Tip:</strong> Consistent intake is more important than perfection. Tracker your progress for 2 weeks before adjusting these targets.
-                            </div>
-                        </div>
                     </div>
                 )}
             </div>
