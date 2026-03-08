@@ -2,6 +2,8 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
 require('dotenv').config();
 
 const authRoutes = require('./src/routes/auth');
@@ -50,9 +52,20 @@ const io = new Server(httpServer, {
 app.set('io', io);
 
 // Middleware
+app.use(helmet()); // Basic security headers
 app.use(cors(corsOptions));
 app.use(express.json({ limit: '5mb' }));
 app.use(express.urlencoded({ extended: true, limit: '5mb' }));
+
+// Rate limiting to prevent brute-force
+const limiter = rateLimit({
+  windowMs: 15 * 60 * 1000, // 15 minutes
+  max: 100, // limit each IP to 100 requests per windowMs
+  message: { message: 'Too many requests from this IP, please try again after 15 minutes' }
+});
+
+// Apply rate limiting to all routes
+app.use('/api/', limiter);
 
 // Routes
 app.use('/api/auth', authRoutes);
