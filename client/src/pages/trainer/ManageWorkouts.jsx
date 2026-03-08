@@ -10,8 +10,8 @@ import {
     ArrowPathIcon,
     UserIcon,
     AdjustmentsHorizontalIcon,
-    XMarkIcon,
-    ChevronRightIcon
+    ChevronRightIcon,
+    XMarkIcon
 } from '@heroicons/react/24/outline';
 
 const T = {
@@ -83,7 +83,6 @@ export default function ManageWorkouts() {
     const handleUpdateExercise = async (exId, data) => {
         try {
             await api.put(`/workouts/plan/${editingPlan.id}/exercise/${exId}`, data);
-            // Update local state
             setEditingPlan({
                 ...editingPlan,
                 exercises: editingPlan.exercises.map(ex => ex.id === exId ? { ...ex, ...data } : ex),
@@ -117,8 +116,8 @@ export default function ManageWorkouts() {
             order: (editingPlan.exercises.filter(e => e.day === day).length)
         };
         try {
-            const res = await api.post(`/workouts/plan/${editingPlan.id}/exercise`, newEx);
-            openEditor(editingPlan.id); // Reload
+            await api.post(`/workouts/plan/${editingPlan.id}/exercise`, newEx);
+            openEditor(editingPlan.id);
         } catch (err) { alert('Add failed'); }
     };
 
@@ -144,6 +143,49 @@ export default function ManageWorkouts() {
                 .editor-content { width:100%; maxWidth:900px; background:#0c0c0c; border-left:1px solid #222; height:100%; overflow-y:auto; padding:32px; }
                 .ex-row { border:1px solid ${T.border}; background:#111; border-radius:6px; padding:16px; margin-bottom:12px; }
                 @keyframes spin { to { transform: rotate(360deg); } }
+
+                .mech-btn {
+                    background: #1a1a1a;
+                    border: 1px solid #333;
+                    border-bottom: 3px solid #000;
+                    border-radius: 4px;
+                    padding: 8px 12px;
+                    cursor: pointer;
+                    transition: all 0.1s;
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    font-family: ${T.mono};
+                    font-size: 0.6rem;
+                    color: ${T.text};
+                    text-transform: uppercase;
+                    font-weight: 700;
+                    box-shadow: 0 4px 0 rgba(0,0,0,0.2);
+                }
+                .mech-btn:hover {
+                    background: #222;
+                    border-color: #444;
+                    transform: translateY(-1px);
+                    box-shadow: 0 5px 0 rgba(0,0,0,0.3);
+                }
+                .mech-btn:active {
+                    transform: translateY(2px);
+                    border-bottom-width: 1px;
+                    box-shadow: none;
+                }
+                .mech-btn.acc {
+                    background: ${T.accDim};
+                    border-color: ${T.accBorder};
+                    color: ${T.acc};
+                }
+
+                .crt-scanline {
+                    position: absolute; inset: 0;
+                    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+                    background-size: 100% 3px, 3px 100%;
+                    pointer-events: none;
+                    z-index: 10;
+                }
             `}</style>
 
             <div className={`m-fade${mounted ? ' in' : ''}`}>
@@ -229,6 +271,7 @@ export default function ManageWorkouts() {
                         </div>
                     )
                 )}
+
                 {/* ── Editor Overlay ── */}
                 {editingPlan && (
                     <div className="editor-pane">
@@ -322,7 +365,7 @@ export default function ManageWorkouts() {
                                                             <InputField type="number" value={ex.restTime} onChange={e => handleUpdateExercise(ex.id, { restTime: e.target.value })} />
                                                         </div>
                                                     </div>
-                                                    <div style={{ display: 'grid', gridTemplateColumns: '120px 1fr 40px', gap: 12 }}>
+                                                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 40px', gap: 12 }}>
                                                         <div>
                                                             <ModalLabel>Target Muscle</ModalLabel>
                                                             <InputField value={ex.targetMuscle} onChange={e => handleUpdateExercise(ex.id, { targetMuscle: e.target.value })} />
@@ -331,7 +374,7 @@ export default function ManageWorkouts() {
                                                             <ModalLabel>Instructions</ModalLabel>
                                                             <TextArea value={ex.instructions} onChange={e => handleUpdateExercise(ex.id, { instructions: e.target.value })} />
                                                         </div>
-                                                        <div style={{ display: 'flex', alignItems: 'flex-end', paddingBottom: 5 }}>
+                                                        <div style={{ display: 'flex', alignItems: 'flex-end', paddingBottom: 5, justifyContent: 'center' }}>
                                                             <button onClick={() => handleRemoveExercise(ex.id)} style={{ background: 'none', border: 'none', color: '#663333', cursor: 'pointer' }}><TrashIcon style={{ width: 18 }} /></button>
                                                         </div>
                                                     </div>

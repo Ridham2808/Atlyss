@@ -5,7 +5,7 @@ import {
     HomeIcon, UsersIcon, AcademicCapIcon,
     ClipboardDocumentListIcon, CalendarIcon,
     ArrowLeftOnRectangleIcon, ChartBarIcon, UserCircleIcon, ScaleIcon,
-    FingerPrintIcon
+    FingerPrintIcon, SparklesIcon, ClipboardDocumentCheckIcon
 } from '@heroicons/react/24/outline';
 import logo from '../../assets/logo.png';
 
@@ -16,6 +16,7 @@ const roleLinks = {
         { name: 'Members', path: '/members', icon: UsersIcon },
         { name: 'Classes', path: '/classes', icon: CalendarIcon },
         { name: 'Trainers', path: '/trainers', icon: AcademicCapIcon },
+        { name: 'Diet Mgmt', path: '/manage-diets', icon: ClipboardDocumentCheckIcon },
         { name: 'My Profile', path: '/admin/profile', icon: UserCircleIcon },
     ],
     trainer: [
@@ -23,11 +24,13 @@ const roleLinks = {
         { name: 'Members', path: '/members', icon: UsersIcon },
         { name: 'Classes', path: '/classes', icon: CalendarIcon },
         { name: 'Review Plans', path: '/manage-workouts', icon: ClipboardDocumentListIcon },
+        { name: 'Diet Mgmt', path: '/manage-diets', icon: ClipboardDocumentCheckIcon },
         { name: 'My Profile', path: '/trainer/profile', icon: UserCircleIcon },
     ],
     member: [
         { name: 'Dashboard', path: '/dashboard/member', icon: HomeIcon },
         { name: 'Workouts', path: '/workouts', icon: ClipboardDocumentListIcon },
+        { name: 'Diet Plan', path: '/diet-plan', icon: SparklesIcon },
         { name: 'Classes', path: '/classes', icon: CalendarIcon },
         { name: 'Measurements', path: '/my-measurements', icon: ScaleIcon },
         { name: 'Progress', path: '/progress', icon: ChartBarIcon },

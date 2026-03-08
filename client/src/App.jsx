@@ -23,6 +23,8 @@ import MemberProfile from './pages/member/MemberProfile';
 import MemberProgress from './pages/member/MemberProgress';
 import AdminProfile from './pages/admin/AdminProfile';
 import AttendancePage from './pages/AttendancePage';
+import DietPlan from './pages/member/DietPlan';
+import ManageDiets from './pages/trainer/ManageDiets';
 
 const ProfileRedirect = () => {
   const { user } = useAuth();
@@ -158,6 +160,16 @@ function App() {
           <Route path="/workouts" element={
             <ProtectedRoute>
               <Workouts />
+            </ProtectedRoute>
+          } />
+          <Route path="/diet-plan" element={
+            <ProtectedRoute roles={['member']}>
+              <DietPlan />
+            </ProtectedRoute>
+          } />
+          <Route path="/manage-diets" element={
+            <ProtectedRoute roles={['trainer', 'admin']}>
+              <ManageDiets />
             </ProtectedRoute>
           } />
 

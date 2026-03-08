@@ -10,7 +10,8 @@ import {
     ArrowPathIcon,
     SparklesIcon,
     ChevronRightIcon,
-    XMarkIcon
+    XMarkIcon,
+    PlayIcon
 } from '@heroicons/react/24/outline';
 
 const T = {
@@ -71,6 +72,7 @@ export default function Workouts() {
     const [requestForm, setRequestForm] = useState(BLANK_REQUEST);
     const [activeDay, setActiveDay] = useState(1);
     const [mounted, setMounted] = useState(false);
+    const [selectedVideo, setSelectedVideo] = useState(null);
 
     useEffect(() => { setTimeout(() => setMounted(true), 80); }, []);
 
@@ -129,13 +131,74 @@ export default function Workouts() {
             <style>{`
                 .w-fade { opacity:0; transform:translateY(10px); transition:all 0.4s ease; }
                 .w-fade.in { opacity:1; transform:none; }
-                .day-btn { padding:10px 16px; border:1px solid ${T.border}; border-radius:4px; fontFamily:${T.mono}; fontSize:0.75rem; color:${T.muted}; cursor:pointer; background:transparent; transition:0.15s; text-transform:uppercase; font-weight:700; }
+                .day-btn { padding:10px 16px; border:1px solid ${T.border}; border-radius:4px; font-family:${T.mono}; font-size:0.75rem; color:${T.muted}; cursor:pointer; background:transparent; transition:0.15s; text-transform:uppercase; font-weight:700; }
                 .day-btn.active { border-color:${T.acc}; color:${T.acc}; background:${T.accDim}; }
                 .exercise-card { background:${T.card}; border:1px solid ${T.border}; border-radius:6px; padding:18px; margin-bottom:12px; display:flex; gap:20px; transition:0.15s; }
                 .exercise-card:hover { border-color:${T.borderMid}; background:#141414; }
                 @keyframes spin { to { transform: rotate(360deg); } }
                 .pulse { animation: pulse 2s infinite; }
                 @keyframes pulse { 0% { opacity:0.6; } 50% { opacity:1; } 100% { opacity:0.6; } }
+                
+                .mech-btn {
+                    background: #1a1a1a;
+                    border: 1px solid #333;
+                    border-bottom: 3px solid #000;
+                    border-radius: 4px;
+                    padding: 8px 12px;
+                    cursor: pointer;
+                    transition: all 0.1s;
+                    display: flex;
+                    align-items: center;
+                    gap: 6px;
+                    font-family: ${T.mono};
+                    font-size: 0.6rem;
+                    color: ${T.text};
+                    text-transform: uppercase;
+                    font-weight: 700;
+                    box-shadow: 0 4px 0 rgba(0,0,0,0.2);
+                }
+                .mech-btn:hover {
+                    background: #222;
+                    border-color: #444;
+                    transform: translateY(-1px);
+                    box-shadow: 0 5px 0 rgba(0,0,0,0.3);
+                }
+                .mech-btn:active {
+                    transform: translateY(2px);
+                    border-bottom-width: 1px;
+                    box-shadow: none;
+                }
+                .mech-btn.acc {
+                    background: ${T.accDim};
+                    border-color: ${T.accBorder};
+                    color: ${T.acc};
+                }
+
+                .video-modal-backdrop {
+                    position: fixed; inset: 0;
+                    background: rgba(0,0,0,0.8);
+                    backdrop-filter: blur(6px);
+                    z-index: 2000;
+                    display: flex; align-items: center; justify-content: center;
+                    padding: 20px;
+                }
+                .video-container {
+                    width: 95%; max-width: 500px;
+                    aspect-ratio: 16/9;
+                    background: #000;
+                    border: 2px solid ${T.borderMid};
+                    border-radius: 8px;
+                    overflow: hidden;
+                    position: relative;
+                    box-shadow: 0 40px 100px rgba(0,0,0,0.8);
+                }
+                .crt-scanline {
+                    position: absolute; inset: 0;
+                    background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.1) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+                    background-size: 100% 3px, 3px 100%;
+                    pointer-events: none;
+                    z-index: 10;
+                }
             `}</style>
 
             <div className={`w-fade${mounted ? ' in' : ''}`}>
@@ -252,6 +315,15 @@ export default function Workouts() {
                                             <div style={{ fontFamily: T.disp, fontSize: '1.8rem', color: T.hi, lineHeight: 1 }}>{ex.reps}</div>
                                             <div style={{ fontSize: '0.55rem', fontFamily: T.mono, color: T.muted, textTransform: 'uppercase', marginTop: 2 }}>Reps</div>
                                         </div>
+                                        {ex.videoUrl && (
+                                            <button
+                                                className="mech-btn acc"
+                                                onClick={() => setSelectedVideo(ex)}
+                                                style={{ marginTop: 4, width: '100%', justifyContent: 'center' }}
+                                            >
+                                                <PlayIcon style={{ width: 12 }} /> DEMO
+                                            </button>
+                                        )}
                                     </div>
                                 </div>
                             ))}
@@ -351,6 +423,51 @@ export default function Workouts() {
                                     </button>
                                 </div>
                             </form>
+                        </div>
+                    </div>
+                )}
+
+                {/* ── Video Player Modal ── */}
+                {selectedVideo && (
+                    <div className="video-modal-backdrop" onClick={() => setSelectedVideo(null)}>
+                        <div className="video-container" onClick={e => e.stopPropagation()}>
+                            <div className="crt-scanline" />
+                            <div style={{ position: 'absolute', top: 20, left: 20, zIndex: 20, pointerEvents: 'none' }}>
+                                <div style={{ fontFamily: T.mono, fontSize: '0.5rem', color: T.acc, letterSpacing: '0.2em' }}>// VISUAL_GUIDE_OS.v2.5</div>
+                                <div style={{ fontFamily: T.disp, fontSize: '1.2rem', color: '#fff', textTransform: 'uppercase' }}>{selectedVideo.name}</div>
+                            </div>
+                            <button
+                                onClick={() => setSelectedVideo(null)}
+                                style={{ position: 'absolute', top: 20, right: 20, zIndex: 100, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', padding: 8, borderRadius: 4, cursor: 'pointer', color: '#fff' }}
+                            >
+                                <XMarkIcon style={{ width: 20 }} />
+                            </button>
+
+                            {selectedVideo.isvideo ? (
+                                <video
+                                    src={selectedVideo.videoUrl}
+                                    autoPlay
+                                    loop
+                                    controls
+                                    style={{ width: '100%', height: '100%', objectFit: 'cover' }}
+                                />
+                            ) : (
+                                <img
+                                    src={selectedVideo.videoUrl}
+                                    alt={selectedVideo.name}
+                                    style={{ width: '100%', height: '100%', objectFit: 'contain' }}
+                                />
+                            )}
+
+                            <div style={{ position: 'absolute', bottom: 20, left: 20, right: 20, zIndex: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', pointerEvents: 'none' }}>
+                                <div>
+                                    <div style={{ fontFamily: T.mono, fontSize: '0.55rem', color: T.muted }}>MUSCLE_GROUP: {selectedVideo.videoMuscle || selectedVideo.targetMuscle}</div>
+                                    <div style={{ fontFamily: T.mono, fontSize: '0.55rem', color: T.muted }}>EQUIPMENT: {selectedVideo.videoEquipment || 'Standard'}</div>
+                                </div>
+                                <div style={{ writingMode: 'vertical-rl', fontFamily: T.mono, fontSize: '0.45rem', color: 'rgba(255,255,255,0.1)', letterSpacing: '0.5em' }}>
+                                    ATLYSS_PROTO_04A
+                                </div>
+                            </div>
                         </div>
                     </div>
                 )}

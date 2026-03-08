@@ -97,6 +97,8 @@ model Member {
   trainer          Trainer?           @relation(fields: [trainerId], references: [id], onDelete: SetNull)
   workoutRequests  WorkoutRequest[]
   workoutPlans     WorkoutPlan[]
+  dietRequests     DietRequest[]
+  dietPlans        DietPlan[]
   measurements     BodyMeasurement[]
   reviews          TrainerReview[]
 
@@ -177,6 +179,7 @@ model Trainer {
   classes          Class[]
   reviews          TrainerReview[]
   workoutPlans     WorkoutPlan[]
+  dietPlans        DietPlan[]
 }
 
 model TrainerReview {
@@ -249,6 +252,10 @@ model WorkoutExercise {
   restTime      Int         @default(60) // Seconds
   instructions  String
   targetMuscle  String
+  videoUrl      String?
+  videoMuscle   String?
+  videoEquipment String?
+  isvideo       Boolean     @default(false)
   order         Int         @default(0)
 
   plan          WorkoutPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
@@ -275,5 +282,72 @@ model Class {
   capacity     Int          @default(20)
   trainer      Trainer      @relation(fields: [trainerId], references: [id], onDelete: Cascade)
   attendance   Attendance[]
+}
+
+model DietRequest {
+  id                Int      @id @default(autoincrement())
+  memberId          Int
+  bmi               Float?
+  bmiStatus         String?
+  dietGoal          String
+  targetWeight      Float?
+  activityLevel     String
+  workoutDuration   Int      @default(0)
+  sleepDuration     Int      @default(8)
+  dietType          String
+  preferredCuisine  String?
+  mealsPerDay       Int      @default(3)
+  foodAllergies     String?
+  foodsLike         String?
+  foodsAvoid        String?
+  healthConditions  String?
+  dietaryRestrictions String?
+  waterIntake       String?
+  smokingAlcohol    String?
+  physicalLimitations String?
+  status            String   @default("pending") // pending | generated | fulfilled
+  createdAt         DateTime @default(now())
+
+  member            Member   @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  dietPlan          DietPlan?
+}
+
+model DietPlan {
+  id             Int               @id @default(autoincrement())
+  memberId       Int
+  requestId      Int?              @unique
+  name           String
+  goal           String
+  duration       Int               @default(7)
+  status         String            @default("pending") // pending | active | completed
+  isAiGenerated  Boolean           @default(true)
+  isTrainerEdited Boolean          @default(false)
+  trainerId      Int?              // The trainer who reviewed/edited it
+  recommendations String?          // Additional recommendations (e.g. "Drink 3 liters of water")
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+
+  member         Member            @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  request        DietRequest?      @relation(fields: [requestId], references: [id])
+  trainer        Trainer?          @relation(fields: [trainerId], references: [id], onDelete: SetNull)
+  meals          DietMeal[]
+
+  @@index([memberId])
+  @@index([status])
+}
+
+model DietMeal {
+  id               Int      @id @default(autoincrement())
+  planId           Int
+  day              Int      // 1-7
+  mealType         String   // Breakfast, Mid-Morning Snack, Lunch, Evening Snack, Dinner
+  mealName         String
+  description      String?
+  calories         Int?
+  protein          Float?
+  carbs            Float?
+  fats             Float?
+
+  plan             DietPlan @relation(fields: [planId], references: [id], onDelete: Cascade)
 }
 

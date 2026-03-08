@@ -4,6 +4,41 @@ const prisma = require('../lib/prisma');
 const verifyToken = require('../middleware/authMiddleware');
 const requireRole = require('../middleware/roleMiddleware');
 const { generateWorkout } = require('../lib/workoutGenerator');
+const exerciseData = require('../data/exercises.json');
+
+const findVideo = (exerciseName) => {
+    if (!exerciseName) return null;
+
+    // Normalize: lowercase and replace non-alphanumeric with spaces
+    const clean = exerciseName.toLowerCase().replace(/[^a-z0-9]/g, ' ').trim();
+    const keywords = clean.split(/\s+/).filter(k => k.length > 2).map(k => k.endsWith('s') ? k.slice(0, -1) : k);
+    const compact = clean.replace(/\s+/g, '');
+
+    // 1. Try compact inclusion (handles "AbWheel" vs "Ab Wheel")
+    let match = exerciseData.find(ex => {
+        const exNameCompact = ex.name.toLowerCase().replace(/[^a-z0-9]/g, '');
+        return exNameCompact.includes(compact) || compact.includes(exNameCompact);
+    });
+
+    // 2. Try matching based on ALL keywords present
+    if (!match && keywords.length > 0) {
+        match = exerciseData.find(ex => {
+            const exNameClean = ex.name.toLowerCase().replace(/[^a-z0-9]/g, ' ');
+            return keywords.every(k => exNameClean.includes(k));
+        });
+    }
+
+    // 3. Try matching based on SOME keywords (at least 2 if possible)
+    if (!match && keywords.length > 1) {
+        match = exerciseData.find(ex => {
+            const exNameClean = ex.name.toLowerCase().replace(/[^a-z0-9]/g, ' ');
+            const matchedCount = keywords.filter(k => exNameClean.includes(k)).length;
+            return matchedCount >= 2;
+        });
+    }
+
+    return match;
+};
 
 router.use(verifyToken);
 
@@ -58,17 +93,24 @@ router.post('/request', requireRole('member'), async (req, res) => {
                 status: 'pending',
                 isAiGenerated: true,
                 exercises: {
-                    create: aiPlan.exercises.map(ex => ({
-                        day: ex.day,
-                        dayTitle: ex.dayTitle,
-                        name: ex.name,
-                        sets: ex.sets,
-                        reps: ex.reps.toString(),
-                        restTime: ex.restTime,
-                        instructions: ex.instructions,
-                        targetMuscle: ex.targetMuscle,
-                        order: ex.order
-                    }))
+                    create: aiPlan.exercises.map(ex => {
+                        const video = findVideo(ex.name);
+                        return {
+                            day: ex.day,
+                            dayTitle: ex.dayTitle,
+                            name: ex.name,
+                            sets: ex.sets,
+                            reps: ex.reps.toString(),
+                            restTime: ex.restTime,
+                            instructions: ex.instructions,
+                            targetMuscle: ex.targetMuscle,
+                            videoUrl: video ? video.main : null,
+                            videoMuscle: video ? video.muscle : null,
+                            videoEquipment: video ? video.equipment : null,
+                            isvideo: video ? !!video.isvideo : false,
+                            order: ex.order
+                        };
+                    })
                 }
             },
             include: { exercises: true }
@@ -166,6 +208,7 @@ router.get('/plan/:id', requireRole('trainer', 'admin', 'member'), async (req, r
 router.put('/plan/:id/exercise/:exId', requireRole('trainer', 'admin'), async (req, res) => {
     try {
         const { name, sets, reps, restTime, instructions, targetMuscle, day, dayTitle } = req.body;
+        const video = findVideo(name);
         await prisma.workoutExercise.update({
             where: { id: parseInt(req.params.exId) },
             data: {
@@ -175,6 +218,10 @@ router.put('/plan/:id/exercise/:exId', requireRole('trainer', 'admin'), async (r
                 restTime: parseInt(restTime),
                 instructions,
                 targetMuscle,
+                videoUrl: video ? video.main : null,
+                videoMuscle: video ? video.muscle : null,
+                videoEquipment: video ? video.equipment : null,
+                isvideo: video ? !!video.isvideo : false,
                 day: parseInt(day),
                 dayTitle
             }
@@ -198,6 +245,7 @@ router.post('/plan/:id/exercise', requireRole('trainer', 'admin'), async (req, r
         const planId = parseInt(req.params.id);
         const { name, sets, reps, restTime, instructions, targetMuscle, day, dayTitle, order } = req.body;
 
+        const video = findVideo(name);
         await prisma.workoutExercise.create({
             data: {
                 planId,
@@ -209,6 +257,10 @@ router.post('/plan/:id/exercise', requireRole('trainer', 'admin'), async (req, r
                 restTime: parseInt(restTime),
                 instructions,
                 targetMuscle,
+                videoUrl: video ? video.main : null,
+                videoMuscle: video ? video.muscle : null,
+                videoEquipment: video ? video.equipment : null,
+                isvideo: video ? !!video.isvideo : false,
                 order: parseInt(order) || 0
             }
         });
