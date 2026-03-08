@@ -69,6 +69,7 @@ const Register = () => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [adminKey, setAdminKey] = useState('');
   const [loading, setLoading] = useState(false);
   const [focused, setFocused] = useState(null);
   const [mounted, setMounted] = useState(false);
@@ -89,10 +90,10 @@ const Register = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!name || !email || !password) { toast.error('Fill in all fields'); return; }
+    if (!name || !email || !password || !adminKey) { toast.error('Fill in all fields'); return; }
     setLoading(true);
     try {
-      const user = await register({ name, email, password, role: 'admin' });
+      const user = await register({ name, email, password, adminKey, role: 'admin' });
       navigate(`/dashboard/${user.role}`);
     } catch { /* handled in AuthContext */ } finally { setLoading(false); }
   };
@@ -644,6 +645,27 @@ const Register = () => {
                     placeholder="••••••••"
                     className="pg-input"
                     autoComplete="new-password"
+                  />
+                </div>
+              </div>
+
+              {/* Admin Secret Key */}
+              <div className={`pg-field ${focused === 'adminKey' ? 'focused' : ''}`}>
+                <label className="pg-label">Admin Secret Key</label>
+                <div className="pg-input-wrap">
+                  <svg className="pg-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                    <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3" />
+                    <path d="M15.5 7.5L13 10M13.5 12l2.5 2.5" />
+                  </svg>
+                  <input
+                    type="password"
+                    value={adminKey}
+                    onChange={(e) => setAdminKey(e.target.value)}
+                    onFocus={() => setFocused('adminKey')}
+                    onBlur={() => setFocused(null)}
+                    placeholder="Enter security key"
+                    className="pg-input"
+                    autoComplete="off"
                   />
                 </div>
               </div>

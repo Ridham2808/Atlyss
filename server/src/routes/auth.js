@@ -7,10 +7,16 @@ const prisma = require('../lib/prisma');
 // POST /api/auth/register
 router.post('/register', async (req, res) => {
     try {
-        const { name, email, password, role, age, height, weight, fitnessGoal, membershipType, specialization, experience } = req.body;
+        const { name, email, password, adminKey } = req.body;
 
         if (!name || !email || !password) {
             return res.status(400).json({ message: 'Name, email, and password are required' });
+        }
+
+        // Validate Admin Security Key
+        const secretKey = process.env.ADMIN_REGISTRATION_KEY || 'AtlyssAdmin2026@Secure';
+        if (adminKey !== secretKey) {
+            return res.status(403).json({ message: 'Invalid Admin Security Key' });
         }
 
         // Check if email already exists
