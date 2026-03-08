@@ -131,7 +131,8 @@ router.get('/pending', requireRole('trainer', 'admin'), async (req, res) => {
             where: { status: 'pending' },
             include: {
                 member: { include: { user: { select: { name: true } } } },
-                request: true
+                request: true,
+                meals: { orderBy: [{ day: 'asc' }, { id: 'asc' }] }
             },
             orderBy: { createdAt: 'desc' }
         });
@@ -147,7 +148,8 @@ router.get('/active', requireRole('trainer', 'admin'), async (req, res) => {
             where: { status: 'active' },
             include: {
                 member: { include: { user: { select: { name: true } } } },
-                request: true
+                request: true,
+                meals: { orderBy: [{ day: 'asc' }, { id: 'asc' }] }
             },
             orderBy: { updatedAt: 'desc' }
         });
@@ -171,6 +173,83 @@ router.get('/plan/:id', requireRole('trainer', 'admin', 'member'), async (req, r
         res.json({ plan });
     } catch (err) {
         res.status(500).json({ message: 'Failed to fetch diet plan' });
+    }
+});
+
+// PUT /api/diet/plan/:id/meal/:mealId — Edit a specific meal
+router.put('/plan/:id/meal/:mealId', requireRole('trainer', 'admin'), async (req, res) => {
+    try {
+        const { mealName, description, calories, protein, carbs, fats, mealType, day } = req.body;
+        await prisma.dietMeal.update({
+            where: { id: parseInt(req.params.mealId) },
+            data: {
+                mealName,
+                description,
+                calories: calories ? parseInt(calories) : null,
+                protein: protein ? parseFloat(protein) : null,
+                carbs: carbs ? parseFloat(carbs) : null,
+                fats: fats ? parseFloat(fats) : null,
+                mealType,
+                day: day ? parseInt(day) : undefined
+            }
+        });
+
+        // Mark plan as trainer edited
+        await prisma.dietPlan.update({
+            where: { id: parseInt(req.params.id) },
+            data: { isTrainerEdited: true }
+        });
+
+        res.json({ message: 'Meal updated' });
+    } catch (err) {
+        res.status(500).json({ message: 'Failed to update meal' });
+    }
+});
+
+// POST /api/diet/plan/:id/meal — Add a new meal to a plan
+router.post('/plan/:id/meal', requireRole('trainer', 'admin'), async (req, res) => {
+    try {
+        const { mealName, description, calories, protein, carbs, fats, mealType, day } = req.body;
+        await prisma.dietMeal.create({
+            data: {
+                planId: parseInt(req.params.id),
+                day: parseInt(day),
+                mealName,
+                description,
+                mealType,
+                calories: calories ? parseInt(calories) : null,
+                protein: protein ? parseFloat(protein) : null,
+                carbs: carbs ? parseFloat(carbs) : null,
+                fats: fats ? parseFloat(fats) : null
+            }
+        });
+
+        await prisma.dietPlan.update({
+            where: { id: parseInt(req.params.id) },
+            data: { isTrainerEdited: true }
+        });
+
+        res.status(201).json({ message: 'Meal added' });
+    } catch (err) {
+        res.status(500).json({ message: 'Failed to add meal' });
+    }
+});
+
+// DELETE /api/diet/plan/:id/meal/:mealId — Remove a meal
+router.delete('/plan/:id/meal/:mealId', requireRole('trainer', 'admin'), async (req, res) => {
+    try {
+        await prisma.dietMeal.delete({
+            where: { id: parseInt(req.params.mealId) }
+        });
+
+        await prisma.dietPlan.update({
+            where: { id: parseInt(req.params.id) },
+            data: { isTrainerEdited: true }
+        });
+
+        res.json({ message: 'Meal removed' });
+    } catch (err) {
+        res.status(500).json({ message: 'Failed to remove meal' });
     }
 });
 

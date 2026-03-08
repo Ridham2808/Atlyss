@@ -11,7 +11,11 @@ import {
     UserIcon,
     ListBulletIcon,
     BeakerIcon,
-    XMarkIcon
+    XMarkIcon,
+    PencilSquareIcon,
+    PlusIcon,
+    TrashIcon,
+    FireIcon
 } from '@heroicons/react/24/outline';
 
 const T = {
@@ -31,6 +35,10 @@ export default function ManageDiets() {
     const [loading, setLoading] = useState(true);
     const [selectedPlan, setSelectedPlan] = useState(null);
     const [finalizing, setFinalizing] = useState(false);
+    const [editingMeal, setEditingMeal] = useState(null);
+    const [showMealModal, setShowMealModal] = useState(false);
+    const [savingMeal, setSavingMeal] = useState(false);
+    const [activeDay, setActiveDay] = useState(1);
 
     const fetchData = async () => {
         setLoading(true);
@@ -49,6 +57,53 @@ export default function ManageDiets() {
     };
 
     useEffect(() => { fetchData(); }, []);
+
+    const handleSaveMeal = async (e) => {
+        e.preventDefault();
+        setSavingMeal(true);
+        try {
+            const formData = new FormData(e.target);
+            const mealData = Object.fromEntries(formData.entries());
+
+            if (editingMeal.id) {
+                await api.put(`/diet/plan/${selectedPlan.id}/meal/${editingMeal.id}`, mealData);
+                toast.success('Meal updated');
+            } else {
+                await api.post(`/diet/plan/${selectedPlan.id}/meal`, { ...mealData, day: activeDay });
+                toast.success('Meal added');
+            }
+
+            setShowMealModal(false);
+            setEditingMeal(null);
+            fetchData();
+
+            // Re-select to refresh meals
+            const updatedPending = await api.get('/diet/pending');
+            const updatedActive = await api.get('/diet/active');
+            const combined = [...updatedPending.data.plans, ...updatedActive.data.plans];
+            setSelectedPlan(combined.find(p => p.id === selectedPlan.id));
+        } catch (err) {
+            toast.error('Failed to save meal');
+        } finally {
+            setSavingMeal(false);
+        }
+    };
+
+    const handleDeleteMeal = async (mealId) => {
+        if (!window.confirm('Are you sure you want to delete this meal?')) return;
+        try {
+            await api.delete(`/diet/plan/${selectedPlan.id}/meal/${mealId}`);
+            toast.success('Meal removed');
+            fetchData();
+
+            const updatedPending = await api.get('/diet/pending');
+            const updatedActive = await api.get('/diet/active');
+            const combined = [...updatedPending.data.plans, ...updatedActive.data.plans];
+            setSelectedPlan(combined.find(p => p.id === selectedPlan.id));
+        } catch (err) {
+            toast.error('Failed to delete meal');
+        }
+    };
 
     const handleFinalize = async (id) => {
         setFinalizing(true);
@@ -196,18 +251,56 @@ export default function ManageDiets() {
                                 </div>
 
                                 <div style={{ background: '#0a0a0a', border: `1px solid ${T.border}`, borderRadius: 8, padding: 25 }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 20 }}>
-                                        <ListBulletIcon style={{ width: 18, color: T.acc }} />
-                                        <span style={{ fontFamily: T.disp, fontSize: '1.4rem', color: T.hi, letterSpacing: '0.04em' }}>7-Day Draft Preview</span>
+                                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 20 }}>
+                                        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+                                            <ListBulletIcon style={{ width: 18, color: T.acc }} />
+                                            <span style={{ fontFamily: T.disp, fontSize: '1.4rem', color: T.hi, letterSpacing: '0.04em' }}>Meal Schedule & Editor</span>
+                                        </div>
+                                        <div style={{ display: 'flex', gap: 5 }}>
+                                            {[1, 2, 3, 4, 5, 6, 7].map(day => (
+                                                <button
+                                                    key={day}
+                                                    onClick={() => setActiveDay(day)}
+                                                    style={{
+                                                        width: 28, height: 28, borderRadius: 4, border: `1px solid ${activeDay === day ? T.acc : T.border}`,
+                                                        background: activeDay === day ? T.accDim : 'transparent', color: activeDay === day ? T.acc : T.muted,
+                                                        fontFamily: T.mono, fontSize: '0.65rem', fontWeight: 700, cursor: 'pointer'
+                                                    }}
+                                                >
+                                                    D{day}
+                                                </button>
+                                            ))}
+                                        </div>
                                     </div>
-                                    <div style={{ fontSize: '0.75rem', color: T.muted, fontFamily: T.mono }}>Reviewing the generated macros and meal types. Trainers can currently view and activate. (Full editing per-meal coming in next patch).</div>
-                                    <div style={{ marginTop: 20, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                                        {[1, 2, 3, 4, 5, 6, 7].map(d => (
-                                            <div key={d} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '10px 15px', background: 'rgba(255,255,255,0.02)', borderRadius: 4, border: '1px solid rgba(255,255,255,0.05)' }}>
-                                                <span style={{ fontSize: '0.65rem', fontFamily: T.mono, color: T.text }}>DAY {d} MEAL SCHEDULE</span>
-                                                <ChevronRightIcon style={{ width: 14, color: T.muted }} />
+
+                                    <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
+                                        {selectedPlan.meals?.filter(m => m.day === activeDay).map(meal => (
+                                            <div key={meal.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '15px 20px', background: 'rgba(255,255,255,0.02)', borderRadius: 6, border: `1px solid ${T.border}` }}>
+                                                <div style={{ flex: 1 }}>
+                                                    <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 4 }}>
+                                                        <span style={{ fontSize: '0.55rem', fontFamily: T.mono, color: T.acc, textTransform: 'uppercase', letterSpacing: '0.1em' }}>{meal.mealType}</span>
+                                                        <span style={{ color: T.hi, fontWeight: 700, fontSize: '0.9rem' }}>{meal.mealName}</span>
+                                                    </div>
+                                                    <div style={{ display: 'flex', gap: 15 }}>
+                                                        <div style={{ fontSize: '0.6rem', color: T.muted, fontFamily: T.mono }}><FireIcon style={{ width: 10, display: 'inline', marginRight: 2 }} />{meal.calories} KCAL</div>
+                                                        <div style={{ fontSize: '0.6rem', color: T.muted, fontFamily: T.mono }}>P: {meal.protein}g</div>
+                                                        <div style={{ fontSize: '0.6rem', color: T.muted, fontFamily: T.mono }}>C: {meal.carbs}g</div>
+                                                        <div style={{ fontSize: '0.6rem', color: T.muted, fontFamily: T.mono }}>F: {meal.fats}g</div>
+                                                    </div>
+                                                </div>
+                                                <div style={{ display: 'flex', gap: 8 }}>
+                                                    <button onClick={() => { setEditingMeal(meal); setShowMealModal(true); }} style={{ background: 'transparent', border: 'none', color: T.muted, cursor: 'pointer', padding: 5 }}><PencilSquareIcon style={{ width: 16 }} /></button>
+                                                    <button onClick={() => handleDeleteMeal(meal.id)} style={{ background: 'transparent', border: 'none', color: '#ff4d4d', cursor: 'pointer', padding: 5 }}><TrashIcon style={{ width: 16 }} /></button>
+                                                </div>
                                             </div>
                                         ))}
+
+                                        <button
+                                            onClick={() => { setEditingMeal({}); setShowMealModal(true); }}
+                                            style={{ marginTop: 10, background: 'rgba(255,255,255,0.03)', border: `1px dashed ${T.border}`, borderRadius: 6, padding: 12, width: '100%', color: T.muted, fontFamily: T.mono, fontSize: '0.65rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+                                        >
+                                            <PlusIcon style={{ width: 14 }} /> ADD MEAL TO DAY {activeDay}
+                                        </button>
                                     </div>
                                 </div>
                             </div>
@@ -215,6 +308,65 @@ export default function ManageDiets() {
                     </div>
                 )}
             </div>
+
+            {/* Meal Modal */}
+            {showMealModal && (
+                <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', zIndex: 3000, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}>
+                    <div style={{ background: T.card, border: `1px solid ${T.border}`, borderRadius: 12, padding: 30, width: '100%', maxWidth: 500 }}>
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 25 }}>
+                            <h2 style={{ fontFamily: T.disp, fontSize: '1.8rem', color: T.hi }}>{editingMeal.id ? 'Edit Meal' : 'Add New Meal'}</h2>
+                            <button onClick={() => setShowMealModal(false)} style={{ background: 'transparent', border: 'none', color: T.muted, cursor: 'pointer' }}><XMarkIcon style={{ width: 24 }} /></button>
+                        </div>
+                        <form onSubmit={handleSaveMeal}>
+                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 20 }}>
+                                <div style={{ gridColumn: 'span 2' }}>
+                                    <label style={{ display: 'block', fontSize: '0.6rem', color: T.muted, fontFamily: T.mono, marginBottom: 8 }}>MEAL NAME</label>
+                                    <input name="mealName" defaultValue={editingMeal.mealName} required style={{ width: '100%', background: '#0a0a0a', border: `1px solid ${T.border}`, borderRadius: 4, padding: '10px 12px', color: T.hi, fontSize: '0.9rem' }} />
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '0.6rem', color: T.muted, fontFamily: T.mono, marginBottom: 8 }}>MEAL TYPE</label>
+                                    <select name="mealType" defaultValue={editingMeal.mealType || 'Breakfast'} style={{ width: '100%', background: '#0a0a0a', border: `1px solid ${T.border}`, borderRadius: 4, padding: '10px 12px', color: T.hi, fontSize: '0.9rem' }}>
+                                        <option>Breakfast</option>
+                                        <option>Lunch</option>
+                                        <option>Dinner</option>
+                                        <option>Snack</option>
+                                        <option>Pre-Workout</option>
+                                        <option>Post-Workout</option>
+                                    </select>
+                                </div>
+                                <div />
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '0.6rem', color: T.muted, fontFamily: T.mono, marginBottom: 8 }}>CALORIES</label>
+                                    <input name="calories" type="number" defaultValue={editingMeal.calories} style={{ width: '100%', background: '#0a0a0a', border: `1px solid ${T.border}`, borderRadius: 4, padding: '10px 12px', color: T.hi, fontSize: '0.9rem' }} />
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '0.6rem', color: T.muted, fontFamily: T.mono, marginBottom: 8 }}>PROTEIN (G)</label>
+                                    <input name="protein" type="number" step="0.1" defaultValue={editingMeal.protein} style={{ width: '100%', background: '#0a0a0a', border: `1px solid ${T.border}`, borderRadius: 4, padding: '10px 12px', color: T.hi, fontSize: '0.9rem' }} />
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '0.6rem', color: T.muted, fontFamily: T.mono, marginBottom: 8 }}>CARBS (G)</label>
+                                    <input name="carbs" type="number" step="0.1" defaultValue={editingMeal.carbs} style={{ width: '100%', background: '#0a0a0a', border: `1px solid ${T.border}`, borderRadius: 4, padding: '10px 12px', color: T.hi, fontSize: '0.9rem' }} />
+                                </div>
+                                <div>
+                                    <label style={{ display: 'block', fontSize: '0.6rem', color: T.muted, fontFamily: T.mono, marginBottom: 8 }}>FATS (G)</label>
+                                    <input name="fats" type="number" step="0.1" defaultValue={editingMeal.fats} style={{ width: '100%', background: '#0a0a0a', border: `1px solid ${T.border}`, borderRadius: 4, padding: '10px 12px', color: T.hi, fontSize: '0.9rem' }} />
+                                </div>
+                                <div style={{ gridColumn: 'span 2' }}>
+                                    <label style={{ display: 'block', fontSize: '0.6rem', color: T.muted, fontFamily: T.mono, marginBottom: 8 }}>DESCRIPTION / INSTRUCTIONS</label>
+                                    <textarea name="description" defaultValue={editingMeal.description} rows={3} style={{ width: '100%', background: '#0a0a0a', border: `1px solid ${T.border}`, borderRadius: 4, padding: '10px 12px', color: T.hi, fontSize: '0.85rem' }} />
+                                </div>
+                            </div>
+                            <button
+                                type="submit"
+                                disabled={savingMeal}
+                                style={{ marginTop: 30, width: '100%', background: T.acc, color: '#000', border: 'none', borderRadius: 4, padding: 14, fontFamily: T.mono, fontWeight: 800, fontSize: '0.8rem', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}
+                            >
+                                {savingMeal ? 'SAVING...' : 'SAVE MEAL SPECIFICATIONS'}
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            )}
 
             <style>{`
                 @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
