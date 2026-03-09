@@ -15,7 +15,19 @@
 [![Gemini AI](https://img.shields.io/badge/Gemini%20AI-LLM-4285F4?style=flat-square&logo=google-gemini)](https://deepmind.google/technologies/gemini/)
 [![Socket.io](https://img.shields.io/badge/Socket.io-Real--time-010101?style=flat-square&logo=socket.io)](https://socket.io/)
 
-[🚀 Experience the Live App](https://atlyss-lilac.vercel.app)
+<p align="center">
+  <a href="https://atlyss-lilac.vercel.app">
+    <img src="https://img.shields.io/badge/🌐 Live_App-Visit_Now-6366F1?style=for-the-badge" />
+  </a>
+  
+  <a href="https://drive.google.com/file/d/1e0tugl-ehMCup6Q4x3GH9Dcj4oDFApqv/view?usp=sharing">
+    <img src="https://img.shields.io/badge/🎥 Demo_Walkthrough-Watch_Video-22C55E?style=for-the-badge" />
+  </a>
+  
+  <a href="https://www.figma.com/design/cjEq6Lz3DwnJGAo2M4p2nX/Atlyss?node-id=0-1&t=bQkoqrPH6IoqyiQn-1">
+    <img src="https://img.shields.io/badge/🎨 Figma_Design-View_Design-F24E1E?style=for-the-badge" />
+  </a>
+</p>
 
 </div>
 
